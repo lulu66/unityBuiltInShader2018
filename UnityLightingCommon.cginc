@@ -19,6 +19,7 @@ struct UnityIndirect
     half3 specular;
 };
 
+//Unity全局光照结构体
 struct UnityGI
 {
     UnityLight light;

@@ -212,7 +212,7 @@ inline float3 UnityWorldSpaceLightDir( in float3 worldPos )
     #else
         #ifndef USING_DIRECTIONAL_LIGHT
         return _WorldSpaceLightPos0.xyz - worldPos;
-        #else
+        #else_
         return _WorldSpaceLightPos0.xyz;
         #endif
     #endif
@@ -631,6 +631,7 @@ inline half3 DecodeDirectionalLightmap (half3 color, fixed4 dirTex, half3 normal
 }
 
 // Encoding/decoding [0..1) floats into 8 bit/channel RGBA. Note that 1.0 will not be encoded properly.
+//将一个[0,1)之间浮点数压缩到8位的RGBA通道
 inline float4 EncodeFloatRGBA( float v )
 {
     float4 kEncodeMul = float4(1.0, 255.0, 65025.0, 16581375.0);
@@ -640,6 +641,7 @@ inline float4 EncodeFloatRGBA( float v )
     enc -= enc.yzww * kEncodeBit;
     return enc;
 }
+//将RGBA通道压缩的数据解压为float型
 inline float DecodeFloatRGBA( float4 enc )
 {
     float4 kDecodeDot = float4(1.0, 1/255.0, 1/65025.0, 1/16581375.0);
@@ -673,6 +675,8 @@ inline float2 EncodeViewNormalStereo( float3 n )
     enc = enc*0.5+0.5;
     return enc;
 }
+
+//为什么输入类型是float4而不是float2???
 inline float3 DecodeViewNormalStereo( float4 enc4 )
 {
     float kScale = 1.7777;
@@ -684,6 +688,7 @@ inline float3 DecodeViewNormalStereo( float4 enc4 )
     return n;
 }
 
+//将深度和法线共同压缩至float4当中，法线占前两位，深度占后两位
 inline float4 EncodeDepthNormal( float depth, float3 normal )
 {
     float4 enc;
@@ -708,6 +713,7 @@ inline fixed3 UnpackNormalDXT5nm (fixed4 packednormal)
 
 // Unpack normal as DXT5nm (1, y, 1, x) or BC5 (x, y, 0, 1)
 // Note neutral texture like "bump" is (0, 0, 1, 1) to work with both plain RGB normal and DXT5nm/BC5
+//法线贴图可能是经过压缩的，压缩格式为DXT5nm或者BC5格式
 fixed3 UnpackNormalmapRGorAG(fixed4 packednormal)
 {
     // This do the trick
@@ -718,6 +724,7 @@ fixed3 UnpackNormalmapRGorAG(fixed4 packednormal)
     normal.z = sqrt(1 - saturate(dot(normal.xy, normal.xy)));
     return normal;
 }
+
 inline fixed3 UnpackNormal(fixed4 packednormal)
 {
 #if defined(UNITY_NO_DXT5nm)
@@ -741,17 +748,19 @@ fixed3 UnpackNormalWithScale(fixed4 packednormal, float scale)
 }
 
 // Z buffer to linear 0..1 depth
+//将深度值转换成线性的0-1之间
 inline float Linear01Depth( float z )
 {
     return 1.0 / (_ZBufferParams.x * z + _ZBufferParams.y);
 }
 // Z buffer to linear depth
+//深度值转换为视图空间的线性深度
 inline float LinearEyeDepth( float z )
 {
     return 1.0 / (_ZBufferParams.z * z + _ZBufferParams.w);
 }
 
-
+//咋用？
 inline float2 UnityStereoScreenSpaceUVAdjustInternal(float2 uv, float4 scaleAndOffset)
 {
     return uv.xy * scaleAndOffset.xy + scaleAndOffset.zw;
@@ -835,6 +844,8 @@ v2f_img vert_img( appdata_img v )
 // Projected screen position helpers
 #define V2F_SCREEN_TYPE float4
 
+//pos:UnityObjectToClipSpace(xx)后的值，范围[-w, w]
+//返回值范围在[0,w]之间
 inline float4 ComputeNonStereoScreenPos(float4 pos) {
     float4 o = pos * 0.5f;
     o.xy = float2(o.x, o.y*_ProjectionParams.x) + o.w;
